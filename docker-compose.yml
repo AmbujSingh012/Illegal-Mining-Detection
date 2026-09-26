@@ -1,0 +1,97 @@
+services:
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: illegal-mining-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-illegal_mining}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-illegal_mining}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  ai-engine:
+    build:
+      context: ./ai-engine
+
+    container_name: illegal-mining-ai
+    restart: unless-stopped
+
+    environment:
+      PORT: ${AI_ENGINE_PORT:-8000}
+
+    ports:
+      - "${AI_ENGINE_PORT:-8000}:8000"
+
+    volumes:
+      - ./data:/app/data
+
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: illegal-mining-backend
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-engine:
+        condition: service_started
+
+    environment:
+      PORT: ${BACKEND_PORT:-5000}
+
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-illegal_mining}
+
+      JWT_SECRET: ${JWT_SECRET:-change-this-development-secret}
+
+      AI_ENGINE_URL: ${AI_ENGINE_URL:-http://ai-engine:8000}
+
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: illegal-mining-frontend
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api}
+
+    ports:
+      - "5173:5173"
+
+
+volumes:
+  postgres_data:
