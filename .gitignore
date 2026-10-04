@@ -50,3 +50,20 @@ logs/
 
 # Docker
 docker-compose.override.yml
+
+# GIS / Satellite Data
+data/raw/
+*.tif
+*.tiff
+*.jp2
+*.SAFE/
+*.gpkg
+*.shp
+*.shx
+*.dbf
+*.cpg
+*.qgz
+
+!data/raw/
+data/raw/*
+!data/raw/.gitkeep
