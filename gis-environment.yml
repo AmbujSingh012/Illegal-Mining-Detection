@@ -1,11 +1,10 @@
 name: geoguard-gis
 channels:
-  - defaults
+  - conda-forge
 dependencies:
   - python=3.12
-  - rasterio
-  - shapely
   - geopandas
+  - rasterio
   - pyproj
+  - shapely
   - fiona
-prefix: /opt/anaconda3/envs/geoguard-gis
