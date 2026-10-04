@@ -1,0 +1,11 @@
+name: geoguard-gis
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - rasterio
+  - shapely
+  - geopandas
+  - pyproj
+  - fiona
+prefix: /opt/anaconda3/envs/geoguard-gis
